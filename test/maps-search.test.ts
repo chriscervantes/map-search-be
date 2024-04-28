@@ -1,13 +1,32 @@
+import * as fs from "fs";
 import { config } from "dotenv";
 import { describe } from "@jest/globals";
 import { getPlaceAutocomplete, transformReponse } from "../src/map-api";
 import { MapSearchResponse } from "../src/@type";
+import { getAutoCompleteDetails } from "../src/index";
 import { testData } from "./testData";
+import uniqby from "lodash.uniqby";
 
 config();
 let environment = process.env;
 // These are end-to-end tests and need an api key
 describe("Tomtom Places E2E Tests", () => {
+  describe("getAutoCompleteDetail", () => {
+    it("should get only AU addresses in the response", async () => {
+      const response = await getAutoCompleteDetails("Pitts Street");
+
+      expect(response.length).toBeGreaterThan(0);
+      const auAddress = uniqby(response, "AU");
+      expect(auAddress.length).toEqual(1);
+    });
+
+    it("should throw an error if address is missing", async () => {
+      await expect(getAutoCompleteDetails).rejects.toThrow(
+        new Error("Invalid input")
+      );
+    });
+  });
+
   describe("getPlaceAutocomplete", () => {
     it("returns a promise", () => {
       const res = getPlaceAutocomplete({ address: "Charlotte Street" });

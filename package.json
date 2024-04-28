@@ -17,8 +17,10 @@
     "typescript": "^4.2.3"
   },
   "dependencies": {
+    "@types/lodash.uniqby": "^4.7.9",
     "axios": "^0.21.1",
-    "dotenv": "^8.2.0"
+    "dotenv": "^8.2.0",
+    "lodash.uniqby": "^4.7.0"
   },
   "jest": {
     "testEnvironment": "node"
