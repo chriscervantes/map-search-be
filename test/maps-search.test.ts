@@ -1,7 +1,8 @@
 import { config } from "dotenv";
 import { describe } from "@jest/globals";
-import { getPlaceAutocomplete } from "../src/map-api";
-import { Response } from "../src/@type";
+import { getPlaceAutocomplete, transformReponse } from "../src/map-api";
+import { MapSearchResponse } from "../src/@type";
+import { testData } from "./testData";
 
 config();
 let environment = process.env;
@@ -9,17 +10,17 @@ let environment = process.env;
 describe("Tomtom Places E2E Tests", () => {
   describe("getPlaceAutocomplete", () => {
     it("returns a promise", () => {
-      const res = getPlaceAutocomplete("Charlotte Street");
+      const res = getPlaceAutocomplete({ address: "Charlotte Street" });
       expect(res).toBeInstanceOf(Promise);
     });
 
     it("can fetch from the autocomplete api", async () => {
-      const response: Response[] = await getPlaceAutocomplete(
-        "Charlotte Street"
-      );
+      const response: MapSearchResponse[] = await getPlaceAutocomplete({
+        address: "Charlotte Street",
+      });
       expect(response.length).toBeGreaterThan(0);
 
-      response.forEach((res: Response) => {
+      response.forEach((res: MapSearchResponse) => {
         expect(res).toHaveProperty("placeId");
         expect(res).toHaveProperty("streetName");
         expect(res).toHaveProperty("freeformAddress");
@@ -28,12 +29,33 @@ describe("Tomtom Places E2E Tests", () => {
       });
     });
     it("handles no results", async () => {
-      const res = await getPlaceAutocomplete("asfasffasfasafsafs");
+      const res = await getPlaceAutocomplete({ address: "asfasffasfasafsafs" });
       expect(res).toEqual([]);
     });
 
     it("handles error", async () => {
-      await expect(getPlaceAutocomplete("")).rejects.toThrow();
+      await expect(getPlaceAutocomplete({ address: "" })).rejects.toThrow(
+        new Error("Request failed with status code 400")
+      );
+    });
+  });
+
+  describe("transformResponse", () => {
+    it("should transform the filtered ALPI resultsk", () => {
+      const transformedReponse = transformReponse(testData);
+
+      transformedReponse.forEach((res: MapSearchResponse) => {
+        expect(res).toHaveProperty("placeId");
+        expect(typeof res.placeId).toBe("string");
+        expect(res).toHaveProperty("streetName");
+        expect(typeof res.streetName).toBe("string");
+        expect(res).toHaveProperty("freeformAddress");
+        expect(typeof res.freeformAddress).toBe("string");
+        expect(res).toHaveProperty("countryCode");
+        expect(typeof res.countryCode).toBe("string");
+        expect(res).toHaveProperty("country");
+        expect(typeof res.country).toBe("string");
+      });
     });
   });
 });

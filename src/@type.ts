@@ -1,21 +1,21 @@
 type Poi = { name: string; categorySet: string[]; categories: string[] };
-type Coordinates = { lat: string; lon: string };
+type Coordinates = { lat: number; lon: number };
 
 export type Address = {
-  placeId: string;
   streetName: string;
-  municipality: string;
   countrySecondarySubdivision: string;
   countrySubdivision: string;
   countrySubdivisionName: string;
   countrySubdivisionCode: string;
-  postalCode: string;
-  extendedPostalCode: string;
   countryCode: string;
   country: string;
   countryCodeISO3: string;
   freeformAddress: string;
-  localName: string;
+  placeId?: string;
+  postalCode?: string;
+  extendedPostalCode?: string;
+  localName?: string;
+  municipality?: string;
 };
 
 export type TomTomResponse = {
@@ -27,15 +27,19 @@ export type Result = {
   type: string;
   id: string;
   score: number;
-  info: string;
-  poi: Poi;
+  info?: string;
+  poi?: Poi;
   address: Address;
   position: Coordinates;
-  viewport: { topLeftPoint: Coordinates; topRightPoint: Coordinates };
-  entryPoints: { type: string; position: Coordinates };
+  viewport?: {
+    topLeftPoint: Coordinates;
+    topRightPoint?: Coordinates;
+    btmRightPoint?: Coordinates;
+  };
+  entryPoints?: { type: string; position: Coordinates };
 };
 
-export type Response = {
+export type MapSearchResponse = {
   placeId: string;
   streetName: string;
   countryCode: string;
@@ -47,5 +51,10 @@ export type Response = {
 
 export type Environment = {
   TOMTOM_API_KEY: string;
-  Limit: number;
+};
+
+export type GetAutoCompleteRequest = {
+  address: string;
+  filterByCountry?: string;
+  limit?: number;
 };

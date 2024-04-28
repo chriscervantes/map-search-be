@@ -1,12 +1,29 @@
 import axios from "axios";
-import { Result, Response, Environment, TomTomResponse } from "./@type";
-import { TomTomClient } from "./httpClient";
+import {
+  Result,
+  MapSearchResponse,
+  TomTomResponse,
+  Environment,
+  GetAutoCompleteRequest,
+} from "./@type";
 
 // https://developer.tomtom.com/search-api/documentation/search-service/fuzzy-search
-export async function getPlaceAutocomplete(
-  address: string
-): Promise<Response[] | []> {
-  const { TOMTOM_API_KEY, Limit } = process.env;
+/**
+ * This function will fetch the map search, filter the response that it only returns AU address
+ *
+ * @param address: address to search, if this is an empty string it will return all the address and it will have implication to the search performance.
+ * @param filterByCountry: by default it will filter by AU
+ * @param limit: by default it will limit the fetch record to 100
+ * @returns
+ *  MapSearchResponse:
+ *  { placeId, country, countryCode, streetName, freeformAddress, localName, municipality }
+ */
+export async function getPlaceAutocomplete({
+  address,
+  filterByCountry = "AU",
+  limit = 100,
+}: GetAutoCompleteRequest): Promise<MapSearchResponse[] | []> {
+  const { TOMTOM_API_KEY } = process.env as Environment;
 
   if (!TOMTOM_API_KEY) {
     throw new Error("missing api key");
@@ -18,33 +35,28 @@ export async function getPlaceAutocomplete(
       {
         params: {
           key: TOMTOM_API_KEY,
-          limit: Limit,
+          limit,
         },
       }
     );
 
-    const { results } = axiosResponse.data;
+    const { results: searchResults } = axiosResponse.data;
 
-    const auAddress = results.filter(
-      (result: Result) => result.address.countryCode === "AU"
+    const filteredAddress = searchResults.filter(
+      (searchResult: Result) =>
+        searchResult.address.countryCode === filterByCountry
     );
 
-    const response: Response[] = transformReponse(auAddress);
+    const response: MapSearchResponse[] = transformReponse(filteredAddress);
 
     return response;
-  } catch (error: unknown) {
-    const e = error as Error;
-    throw new Error(
-      `Error completing getPlaceAutocomplete process ${JSON.stringify(
-        e,
-        null,
-        3
-      )}`
-    );
+  } catch (e: unknown) {
+    const error = e as Error;
+    throw new Error(error.message);
   }
 }
 
-function transformReponse(data: Result[]): Response[] {
+export function transformReponse(data: Result[]): MapSearchResponse[] {
   return data.map((e: Result) => {
     return {
       placeId: e.id,
